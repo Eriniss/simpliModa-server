@@ -77,3 +77,57 @@ app.post('/blogposts', async (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`서버가 포트 ${port}에서 실행 중입니다.`);
 });
+
+app.delete('/blogposts/:id', async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    await BlogPostModel.findByIdAndRemove(postId);
+    res.json({ message: '블로그 글이 성공적으로 삭제되었습니다.' });
+  } catch (error) {
+    console.error('블로그 글 삭제 오류:', error);
+    res.status(500).json({ error: '블로그 글 삭제 중 오류가 발생했습니다.' });
+  }
+});
+
+app.get('/blogposts/:id', async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    const post = await BlogPostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ error: '포스트를 찾을 수 없습니다.' });
+    }
+
+    res.json(post);
+  } catch (error) {
+    console.error('포스트 조회 오류:', error);
+    res.status(500).json({ error: '포스트 조회 중 오류가 발생했습니다.' });
+  }
+});
+
+app.put('/blogposts/:id', async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    const { title, body, regDate } = req.body as BlogPost;
+
+    // Find the blog post by ID
+    const post = await BlogPostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ error: '포스트를 찾을 수 없습니다.' });
+    }
+
+    // Update the blog post properties
+    post.title = title;
+    post.body = body;
+    post.regDate = regDate;
+
+    // Save the updated post to MongoDB
+    await post.save();
+
+    res.json({ message: '블로그 글이 성공적으로 업데이트되었습니다.' });
+  } catch (error) {
+    console.error('블로그 글 업데이트 오류:', error);
+    res.status(500).json({ error: '블로그 글 업데이트 중 오류가 발생했습니다.' });
+  }
+});
